@@ -41,7 +41,7 @@ def kana_sets():
 
 def gather_data():
     print("gather")
-    number, kana, kanji, definition = [], [], [], []
+    kana, kanji, definition = [], [], []
 
     # which = 0  # both lists
     which = 1  # list 1
@@ -53,17 +53,15 @@ def gather_data():
         lines = text.split("\n")
         for line in lines:
             line = line.split("\t")
-            number += [int(line[0])+1]
             kana += [line[1]]
             kanji += [line[2]]
             line[4] = line[4].split("\r")
             definition += [line[4][0]]
     if which in [0, 2]:
         name = "N2 Vocab List From japanesetest4you.txt"
-        file = codecs.open("{}\\{}".format(os.getcwd(), name), 'r', 'UTF-8')
+        file = codecs.open("{}/{}".format(os.getcwd(), name), 'r', 'UTF-8')
         text = file.read()
         lines = text.split("\n")
-        count1 = 1
         for line in lines:
             count2 = 0
             marker = 0
@@ -73,7 +71,6 @@ def gather_data():
                         kanji += [""]
                         kana += [line[:count2-1]]
                         definition += [line[count2:]]
-                        number += [count1]
                         break
                     else:
                         kanji += [line[:count2]]
@@ -82,18 +79,16 @@ def gather_data():
                 if character == ")":
                     kana += [line[marker:count2]]
                     definition += [line[count2+3:]]
-                    number += [count1]
                     break
                 count2 += 1
-            count1 += 1
-    return number, kana, kanji, definition
+    return kana, kanji, definition
 
 
-def manipulate_data(number, kana, kanji, definition):
+def manipulate_data(kana, kanji, definition):
     print("manipulate")
     count = 0
-    for i in number:
-        if "説" in kanji[i-1]:
+    for i in range(len(kanji)):
+        if "説" in kanji[i]:
             count += 1
     print(count)
 
@@ -104,12 +99,12 @@ def print_cards_txt():
 
 def main():
     # kana_sets()
-    number, kana, kanji, definition = gather_data()
-    # print(number)
+    kana, kanji, definition = gather_data()
     # print(kana)
     print(kanji)
     # print(definition)
-    manipulate_data(number, kana, kanji, definition)
+    print(len(kana), len(kanji), len(definition))
+    manipulate_data(kana, kanji, definition)
     print_cards_txt()
 
 
