@@ -1,0 +1,18 @@
+read in the data from all lists
+    jlpts list
+        some words that have (), like （終わる） or （感）, deal with these
+        some words have ~, deal with these
+    jt4u list
+        need to translate the romaji into kana
+        need to check if the word is written in only kana, and make that a no-kanji word
+    list 1 separates with commas, and list 2 separates with semicolon, maybe just for the sake of matching, we want them to use the same?
+combine lists
+check lists for duplicate entries
+remove duplicate entries
+
+things to check in order to be careful
+    check there are any words that are written in katakana in one list that is written in hiragana in the other
+    i noticed at least one word that had no english translation, check for empty sets like this
+things i want to see for each word
+    i want to see if any other words have the same furigana (like hashi and hashi)
+    for each kanji in the word i want a list of other words that have the same kanji
