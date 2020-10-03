@@ -1,3 +1,23 @@
+assume we only need to know the kyoiku kanji, but might need to know some words that have non-kyoiku kanji.
+if a word with non-kyoiku kanji comes up in the vocab, then the unknown kanji's reading is given.
+if there is a reading for a kanji in the kyoiku list that doesnt show up on the vocab list, i won't remember that reading.
+i will remember the readings by having just 1 words with each reading for each kanji.
+the 1 word will always be different because it will take from words coming next in the loop.
+
+
+i think id like to show it like
+            比較
+            ひかく
+        comparison
+比                        較
+compare                  contrast
+ヒ   くら-べる               カク
+比例  比べる                 比較的
+ひれい くらべる            ひかくてき
+ratio　to compare         comparatively
+
+
+
 read in the data from all lists
     jlpts list
         some words have (), like （終わる） or （感）, deal with these
