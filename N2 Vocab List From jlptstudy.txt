@@ -178,7 +178,7 @@
 177	いい		adj	good
 178	よい		adj	good, nice, pleasant, ok
 179	いいえ		int,n	no, not at all
-180	いえ	いえ	int,n	TODO same as いいえ?
+180	いえ	いえ	int,n
 181	いいだす	言い出す	v5s	to start talking, to speak, to tell, to propose, to suggest, to break the ice
 182	いいつける	言い付ける	v1	to tell, to tell on (someone), to order
 183	いいん	委員	n	committee member

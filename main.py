@@ -50,23 +50,97 @@ def get_kana_sets():
               'za', 'ji', 'zu', 'ze', 'zo',
               'ta', 'chi', 'tsu', 'te', 'to',
               'da', 'dji', 'dzu', 'de', 'do',
-              '[double_consonant]',
+              '#', '#', '[double_consonant]', '#', '#',
               'na', 'ni', 'nu', 'ne', 'no',
               'ha', 'hi', 'fu', 'he', 'ho',
               'ba', 'bi', 'bu', 'be', 'bo',
               'pa', 'pi', 'pu', 'pe', 'po',
               'ma', 'mi', 'mu', 'me', 'mo',
-              'ya', 'yu', 'yo',
-              '[small_ya]', '[small_yu]', '[small_yo]',
+              'ya', '#', 'yu', '#', 'yo',
+              '[small_ya]', '#', '[small_yu]', '#', '[small_yo]',
               'ra', 'ri', 'ru', 're', 'ro',
-              'wa', 'wo', 'n']
-    kana = hiragana + katakana
-    return kana, hiragana, katakana, romaji
+              'wa', '#', '#', '#', 'wo',
+              'n']
+    kana = {'hiragana': hiragana, 'katakana': katakana, 'kana': hiragana + katakana, 'romaji': romaji}
+    return kana
+
+
+def get_joyo_kanji():
+    file = codecs.open('{}/{}'.format(os.getcwd(), 'Joyo Kanji.txt'), 'r', 'UTF-8')
+    text = file.read()
+    file.close()
+    lines = text.split('\n')
+    joyo = dict()
+    joyo['kanji'] = [0] * int(len(lines) / 2)
+    joyo['grade'], joyo['english'], joyo['readings'] = joyo['kanji'].copy(), joyo['kanji'].copy(), joyo['kanji'].copy()
+    for i in range(0, len(lines), 2):
+        j = int(i / 2)
+        lines[i] = lines[i].split('\t')
+        joyo['kanji'][j] = lines[i][0].split('\xa0')[0]
+        joyo['grade'][j] = lines[i][4]
+        joyo['english'][j] = lines[i][6]
+        joyo['readings'][j] = lines[i][7]
+    return joyo
+
+
+def get_kyoiku_kanji(joyo, kana):
+    file = codecs.open('{}/{}'.format(os.getcwd(), 'Kyoiku Kanji.txt'), 'r', 'UTF-8')
+    text = file.read()
+    file.close()
+    kyoiku = dict()
+    kyoiku['kanji'] = []
+    for k in text:
+        if k not in kyoiku['kanji']:
+            kyoiku['kanji'] += [k]
+    kyoiku['english'], kyoiku['readings'] = kyoiku['kanji'].copy(), kyoiku['kanji'].copy()
+    for i in range(len(kyoiku['kanji'])):
+        for j in range(len(joyo['kanji'])):
+            if kyoiku['kanji'][i] == joyo['kanji'][j]:
+                kyoiku['english'][i], kyoiku['readings'][i] = joyo['english'][j], joyo['readings'][j]
+                break
+    for i in range(len(kyoiku['readings'])):
+        kyoiku['readings'][i] = kyoiku['readings'][i].split('、')
+        kyoiku['readings'][i][len(kyoiku['readings'][i]) - 1] = kyoiku[
+            'readings'][i][len(kyoiku['readings'][i]) - 1].split('\r')[0]
+        for j in range(len(kyoiku['readings'][i])):
+            if '[' in kyoiku['readings'][i][j]:
+                kyoiku['readings'][i][j] = kyoiku['readings'][i][j].split('[')[0]
+            if '（' in kyoiku['readings'][i][j]:
+                kyoiku['readings'][i][j] = kyoiku['readings'][i][j][1:len(kyoiku['readings'][i][j]) - 1]
+                kyoiku['readings'][i][j] = kyoiku['kanji'][i] + kyoiku['readings'][i][j]
+    for i in range(len(kyoiku['readings'])):
+        for j in range(len(kyoiku['readings'][i])):
+            if '-' in kyoiku['readings'][i][j]:
+                hyphen_index = kyoiku['readings'][i][j].index('-')
+                last_char = kyoiku['readings'][i][j][len(kyoiku['readings'][i][j])-1]
+                hiragana_index = kana['hiragana'].index(last_char)
+                if hiragana_index % 5 == 2:
+                    if len(kyoiku['readings'][i][j][hyphen_index+1:]) > 1 and last_char == 'る':
+                        to_do = 'remove ru'
+                    else:
+                        to_do = 'change _u character to _i character'
+                    kyoiku['readings'][i][j] = kyoiku['readings'][i][j].replace('-', '')
+                    length = len(kyoiku['readings'][i][j])
+                    if to_do == 'change _u character to _i character':
+                        kyoiku['readings'][i] += [kyoiku['readings'][i][j][:length-1] +
+                                                  kana['hiragana'][hiragana_index - 1]]
+                    else:
+                        kyoiku['readings'][i] += [kyoiku['readings'][i][j][:length-1]]
+                else:
+                    kyoiku['readings'][i][j] = kyoiku['readings'][i][j].replace('-', '')
+    for i in range(len(kyoiku['readings'])):
+        kyoiku['readings'][i] = [{'onyomi': [], 'kunyomi': [], 'all': kyoiku['readings'][i]}]
+        for j in kyoiku['readings'][i]['all']:
+            if kyoiku['readings'][i]['all'][j][1] in kana['katakana']:
+                kyoiku['readings'][i]['onyomi'] += [kyoiku['readings'][i]['all'][j]]
+            elif kyoiku['readings'][i]['all'][j][1] in kana['hiragana']:
+                kyoiku['readings'][i]['kunyomi'] += [kyoiku['readings'][i]['all'][j]]
+    return kyoiku
 
 
 def gather_data():
     print('gather')
-    furigana, japanese, english = [], [], []
+    words = {'japanese': [], 'furigana': [], 'english': []}
     # which = 0  # both lists
     which = 1  # list 1
     # which = 2  # list 2
@@ -79,17 +153,16 @@ def gather_data():
         no_english = 0
         for line in lines:
             line = line.split('\t')
-            furigana += [line[1]]
+            words['furigana'] += [line[1]]
             if line[2] == '':
-                japanese += [line[1]]
+                words['japanese'] += [line[1]]
             else:
-                japanese += [line[2]]
-            # print("ERROR?", line)
+                words['japanese'] += [line[2]]
             line[4] = line[4].split('\r')
             if line[4][0] == '':
-                print('No English: ', line[2], len(japanese))
+                print('No English: ', line[2], len(words['japanese']))
                 no_english += 1
-            english += [line[4][0]]
+            words['english'] += [line[4][0]]
     if which in [0, 2]:
         name = 'N2 Vocab List From japanesetest4you.txt'
         file = codecs.open('{}/{}'.format(os.getcwd(), name), 'r', 'UTF-8')
@@ -102,77 +175,97 @@ def gather_data():
             for character in line:
                 if character == ' ' and marker == 0:
                     if line[count2-1] == ':':
-                        japanese += ['']
-                        furigana += [line[:count2-1]]
-                        english += [line[count2:]]
+                        words['japanese'] += ['']
+                        words['furigana'] += [line[:count2-1]]
+                        words['english'] += [line[count2:]]
                         break
                     else:
-                        japanese += [line[:count2]]
+                        words['japanese'] += [line[:count2]]
                         count2 += 2
                         marker = count2
                 if character == ')':
-                    furigana += [line[marker:count2]]
-                    english += [line[count2+3:]]
+                    words['furigana'] += [line[marker:count2]]
+                    words['english'] += [line[count2+3:]]
                     break
                 count2 += 1
-    return furigana, japanese, english
+    return words
 
 
-def katakana_hiragana_switcher(kana, katakana, hiragana, to=''):
-    for j in range(len(kana)):
-        if kana[j] in katakana or to == 'hiragana':
-            if to == 'hiragana' and kana[j] not in katakana:
+def katakana_hiragana_switcher(text, kana, to=''):
+    for j in range(len(text)):
+        if text in kana['katakana'] or to == 'hiragana':
+            if to == 'hiragana' and text[j] not in kana['katakana']:
                 continue
-            index_j = katakana.index(kana[j])
-            if kana[j] != 'ー':
-                kana = kana[:j] + hiragana[index_j] + kana[j + 1:]
+            index_j = kana['katakana'].index(kana[j])
+            if text[j] != 'ー':
+                text = text[:j] + kana['hiragana'][index_j] + text[j + 1:]
             else:
-                index_jm1 = hiragana.index(kana[j - 1])
-                kana = kana[:j] + hiragana[index_jm1 % 5] + kana[j + 1:]
+                index_jm1 = kana['hiragana'].index(text[j - 1])
+                text = text[:j] + kana['hiragana'][index_jm1 % 5] + text[j + 1:]
         elif to == 'katakana':
-            if to == 'katakana' and kana[j] not in hiragana:
+            if to == 'katakana' and text[j] not in kana['hiragana']:
                 continue
-            index_j = hiragana.index(kana[j])
-            if kana[j] != 'ー':
-                kana = kana[:j] + katakana[index_j] + kana[j + 1:]
+            index_j = kana['hiragana'].index(text[j])
+            if text[j] != 'ー':
+                text = text[:j] + kana['katakana'][index_j] + text[j + 1:]
             else:
-                index_jm1 = katakana.index(kana[j - 1])
-                kana = kana[:j] + katakana[index_jm1 % 5] + kana[j + 1:]
-    return kana
+                index_jm1 = kana['katakana'].index(text[j - 1])
+                text = text[:j] + kana['katakana'][index_jm1 % 5] + text[j + 1:]
+    return text
 
 
-def manipulate_data(furigana, japanese, english, hiragana, katakana, kyoiku_kanji, kyoiku_english, kyoiku_readings):
-    print('manipulate')
-    number = len(japanese)
-    if number != len(furigana) or number != len(english):
-        print('Error in numbers of items in lists')
+def manipulate_data(kana, kyoiku, words):
+    print('Manipulate...')
 
-    for i in range(number):  # this look gets rid of () and ~ in furigana
-        if '（' in furigana[i]:
-            furigana[i] = ''
-        if '~' in furigana[i]:
-            furigana[i] = furigana[i].replace('~', '')
+    """ Check for mismatched number of japanese, english, furigana arrays """
+    # get elements_j, the number of elements in japanese list
+    elements_j = len(words['japanese'])
+    # assert that the numbers of elements in furigana and english lists are also  equal to elements_j
+    assert elements_j == len(words['furigana']), 'Error in numbers of items in lists'
+    assert elements_j == len(words['english']), 'Error in numbers of items in lists'
 
-    kana = hiragana + katakana
-    kanji, kanji_english, kanji_reading,  = japanese.copy(), japanese.copy(), japanese.copy()
-    words_with_same_furigana = japanese.copy()
-    for i in range(number):  # this loop gets all the words_with_same_furigana and makes kanji list
+    for i in range(elements_j):  # get rid of () and ~ in furigana
+        if '（' in words['furigana'][i]:
+            words['furigana'][i] = ''
+        if '~' in words['furigana'][i]:
+            words['furigana'][i] = words['furigana'][i].replace('~', '')
+    """ get words with same furigana and makes kanji list """
+    for i in range(elements_j):  # loop through all the words
         # for j in range(i + 1, i + 1 + number):
         #     if j > number - 1:  # resets j to 0 if it goes past the last word in the list
         #         j -= number
-        words_with_same_furigana[i] = []
-        for j in range(number):
+        count = -1
+        """ get words with same furigana """
+        for j in range(elements_j):  # 2nd loop through all the words
             if i == j:
                 continue
-            if furigana[i] == furigana[j]:  # checks for words_with_same_furigana
-                words_with_same_furigana[i] += [[japanese[j], english[j]]]
-        kanji[i], kanji_english[i], kanji_reading[i] = [], [], []  # empties out kanji, kanji_english, and kanji_reading
-        for k in japanese[i]:  # gets out only the kanji from each japanese word
-            if k not in ['', '~', '(', ')', '/', '='] and k not in kana:
-                kanji[i] += [k]
+            if words['furigana'][i] == words['furigana'][j]:  # checks for words_with_same_furigana
+                count += 1
+                words[f'same furigana {count} japanese'][i] = words['japanese'][j]
+                words[f'same furigana {count} english'][i] = words['english'][j]
+        words['kanji'][i] = []
+        """ make kanji list """
+        for k in words['japanese'][i]:
+            if k not in ['', '~', '(', ')', '/', '='] and k not in kana['kana']:  # if character k is a kanji
+                words['kanji'][i] += [{'kanji': k}]  # adds k to kanji list
+                index_kanji = len(words["kanji"][i]) - 1  # gets index of current kanji in kanji list
+                if k in kyoiku['kanji']:  # if kanji k is a kyoiku kanji
+                    kyoiku_index = kyoiku['kanji'].index(k)  # gets index of current kanji in kyoiku list
+                    words['kanji'][i][index_kanji]['english'] = kyoiku['english'][kyoiku_index]  # inserts english
+                    for m in kyoiku['readings'][kyoiku_index]['all']:  # loops through all joyo readings for this kanji
+                        if katakana_hiragana_switcher(m[1:], kana, to='hiragana') in words['furigana'][i]:
+                            # finds the reading that this kanji has in this word
+                            if m in kyoiku['readings'][kyoiku_index]['onyomi']:
+                                which = 'onyomi'
+                            elif m in kyoiku['readings'][kyoiku_index]['kunyomi']:
+                                which = 'kunyomi'
+                            else:
+                                which = 'none'
+                            words['kanji'][i][index_kanji]['reading'] = {'this reading': m, 'onyomi or kunyomi': which,
+                                                                   'other readings': kyoiku['readings'][kyoiku_index]}
 
-    kanji_reading = japanese.copy()  # this look gets the kanji_reading for each kanji in each word
-    for i in range(number):
+    kanji_reading = words['japanese'].copy()  # this loop gets the kanji_reading for each kanji in each word
+    for i in range(elements_j):
         kanji_reading[i] = []
         for k in kanji[i]:
             if k in kyoiku_kanji:
@@ -190,12 +283,15 @@ def manipulate_data(furigana, japanese, english, hiragana, katakana, kyoiku_kanj
 
     # we have to go thru things like a-u and get rid of the hyphen in the reading, and also make another reading of ai
     words_with_same_kanji = japanese.copy()
-    for i in range(number):  # this loop gets all the words_with_same_kanji
+    count = [{}] * elements_j
+    for i in range(elements_j):  # this loop gets all the words_with_same_kanji
         words_with_same_kanji[i] = []
-        for j in range(i + 1, i + 1 + number - 1):  # this loops from the current i+1, back to 0 after number, until i-1
-            if j > number - 1:  # resets j to 0 if it goes past the last word in the list
-                j -= number
+        for j in range(i + 1, i + 1 + elements_j - 1):  # this loops from the current i+1, back to 0 after number, until i-1
+            if j > elements_j - 1:  # resets j to 0 if it goes past the last word in the list
+                j -= elements_j
             for k in range(len(kanji[i])):
+                count[i]['kanji_{}_onyomi'.format(k)] = 0
+                count[i]['kanji_{}_kunyomi'.format(k)] = 0
                 if kanji[i][k] in kanji[j]:
                     skip = 0
                     index = kanji[j].index(kanji[i][k])
@@ -206,10 +302,13 @@ def manipulate_data(furigana, japanese, english, hiragana, katakana, kyoiku_kanj
                         if kanji_reading[j][index] != 'S+':
                             words_with_same_kanji[i] += [[japanese[j], furigana[j], english[j],
                                                           kanji_reading[j][index]]]
-        print(japanese[i], kanji_reading[i], words_with_same_kanji[i])
+                            if kanji_reading[j][index][1] in katakana:
+                                count[i]['kanji_{}_onyomi'.format(k)] += 1
+                            else:
+                                count[i]['kanji_{}_kunyomi'.format(k)] += 1
 
     all_kanji = []
-    for i in range(number):  # this loop makes all_kanji list
+    for i in range(elements_j):  # this loop makes all_kanji list
         for k in kanji[i]:
             if k not in all_kanji:  # puts any kanji not already in all_kanji into the list
                 all_kanji += [k]
@@ -234,76 +333,50 @@ def manipulate_data(furigana, japanese, english, hiragana, katakana, kyoiku_kanj
     return words_with_same_furigana, words_with_same_kanji, all_kanji
 
 
-def print_cards_txt(furigana, japanese, english, words_with_same_furigana, words_with_same_kanji):
+def print_cards_txt(furigana, japanese, english, kanji, kanji_english, count, words_with_same_furigana, words_with_same_kanji):
     print('print')
     file = codecs.open('{}/{}'.format(os.getcwd(), 'N2_Anki_File.txt'), 'w', 'UTF-8')
-    for i in range(number):
-        file.write('{};{};{};{};{}\n'.format(japanese[i], furigana[i], english[i], words_with_same_furigana[i],
-                                             words_with_same_kanji[i]))
+    for i in range(len(japanese)):
+        # <style>body{font-size:30px}table{font-size:20px}</style><center><body>furigana<br>english<br></body><table border = "1"><tr><td colspan = "2">kanji 1</td><td colspan = "2">kanji 2</td></tr><tr><td colspan = "2">kanji 1 english</td><td colspan = "2">kanji 2 english</td></tr><tr><td>onyomi 1</td><td>kunyomi 1</td><td>onyomi 2</td><td>kunyomi 2</td></tr><tr><td>word</td><td>word</td><td>word</td><td>word</td></tr><tr><td>reading</td><td>reading</td><td>reading</td><td>reading</td></tr><tr><td>english</td><td>english</td><td>english</td><td>english</td></tr></table></center>
+        # <style>body{font-size:30px}table{font-size:20px}</style><center><body>furigana<br>english<br></body>
+        # <table border = "1"><tr><td colspan = "2">kanji 1</td><td colspan = "2">kanji 2</td></tr><tr><td colspan = "2">kanji 1 english</td><td colspan = "2">kanji 2 english</td></tr><tr><td>onyomi 1</td><td>kunyomi 1</td><td>onyomi 2</td><td>kunyomi 2</td></tr><tr><td>word</td><td>word</td><td>word</td><td>word</td></tr><tr><td>reading</td><td>reading</td><td>reading</td><td>reading</td></tr><tr><td>english</td><td>english</td><td>english</td><td>english</td></tr></table></center>
+        file.write('<style>body{{font-size:30px}}</style><center><body>{}</body>;'.format(japanese[i]))
+        file.write('<style>body{{font-size:30px}}table{{font-size:20px}}</style><center><body>{}<br>{}<br></body>'.
+                   format(furigana[i], english[i]))
+        file.write('<table border = "1">')
+        for j in range(6):
+            file.write('<tr>')
+            if j == 0:
+                for k in range(len(kanji[i])):
+                    file.write('<td colspan = "{}">{}</td>'.
+                               format(count[i]['kanji_{}_onyomi'.format(k)] + count[i]['kanji_{}_kunyomi'.format(k)],
+                                      kanji[i][k]))
+            elif j == 1:
+                for k in range(len(kanji[i])):
+                    file.write('<td colspan = "{}">{}</td>'.
+                               format(count[i]['kanji_{}_onyomi'.format(k)] + count[i]['kanji_{}_kunyomi'.format(k)],
+                                      kanji_english[i][k]))
+            elif j == 2:
+                for k in range(len(kanji[i])):
+                    for m in range(count[i]['kanji_{}_kunyomi'.format(k)]):
+                        file.write('<td colspan = "{}">訓<br>{}</td>'.
+                                   format(count[i]['kanji_{}_kunyomi'.format(k)], kanji[i][k]))
+            file.write('</tr>')
+        file.write('<table border = "1">')
     file.close()
-
-
-def get_kyoiku_kanji(joyo_kanji, joyo_english, joyo_readings):
-    file = codecs.open('{}/{}'.format(os.getcwd(), 'Kyoiku Kanji.txt'), 'r', 'UTF-8')
-    text = file.read()
-    file.close()
-    kyoiku_kanji = []
-    for k in text:
-        if k not in kyoiku_kanji:
-            kyoiku_kanji += [k]
-    kyoiku_english, kyoiku_readings = kyoiku_kanji.copy(), kyoiku_kanji.copy()
-    for i in range(len(kyoiku_kanji)):
-        for j in range(len(joyo_kanji)):
-            if kyoiku_kanji[i] == joyo_kanji[j]:
-                kyoiku_english[i], kyoiku_readings[i] = joyo_english[j], joyo_readings[j]
-                break
-    for i in range(len(kyoiku_readings)):
-        kyoiku_readings[i] = kyoiku_readings[i].split('、')
-        kyoiku_readings[i][len(kyoiku_readings[i]) - 1] = kyoiku_readings[i][len(kyoiku_readings[i]) - 1].split(
-            '\r')[0]
-        for j in range(len(kyoiku_readings[i])):
-            if '[' in kyoiku_readings[i][j]:
-                kyoiku_readings[i][j] = kyoiku_readings[i][j].split('[')[0]
-            if '（' in kyoiku_readings[i][j]:
-                kyoiku_readings[i][j] = kyoiku_readings[i][j][1:len(kyoiku_readings[i][j]) - 1]
-            kyoiku_readings[i][j] = kyoiku_kanji[i] + kyoiku_readings[i][j]
-    return kyoiku_kanji, kyoiku_english, kyoiku_readings
-
-
-def get_joyo_kanji():
-    file = codecs.open('{}/{}'.format(os.getcwd(), 'Joyo Kanji.txt'), 'r', 'UTF-8')
-    text = file.read()
-    file.close()
-    lines = text.split('\n')
-    joyo_kanji = [0] * int(len(lines) / 2)
-    joyo_grade = [0] * int(len(lines) / 2)
-    joyo_english = [0] * int(len(lines) / 2)
-    joyo_readings = [0] * int(len(lines) / 2)
-    for i in range(0, len(lines), 2):
-        j = int(i / 2)
-        lines[i] = lines[i].split('\t')
-        joyo_kanji[j] = lines[i][0].split('\xa0')[0]
-        joyo_grade[j] = lines[i][4]
-        joyo_english[j] = lines[i][6]
-        joyo_readings[j] = lines[i][7]
-    return joyo_kanji, joyo_grade, joyo_english, joyo_readings
 
 
 def main():
     test = 0
     if test == 1:
-        joyo_kanji, joyo_grade, joyo_english, joyo_readings = get_joyo_kanji()
-        kyoiku_kanji, kyoiku_english, kyoiku_readings = get_kyoiku_kanji(joyo_kanji, joyo_english, joyo_readings)
-        print(kyoiku_english)
+        1
     else:
         start_time = time.time()
-        kana, hiragana, katakana, romaji = get_kana_sets()
-        joyo_kanji, joyo_grade, joyo_english, joyo_readings = get_joyo_kanji()
-        kyoiku_kanji, kyoiku_english, kyoiku_readings = get_kyoiku_kanji(joyo_kanji, joyo_english, joyo_readings)
-        furigana, japanese, english = gather_data()
-        words_with_same_furigana, words_with_same_kanji, all_kanji = manipulate_data(furigana, japanese, english,
-                                                                                     hiragana, katakana, kyoiku_kanji,
-                                                                                     kyoiku_english, kyoiku_readings)
+        kana = get_kana_sets()
+        joyo = get_joyo_kanji()
+        kyoiku = get_kyoiku_kanji(joyo)
+        words = gather_data()
+        words_with_same_furigana, words_with_same_kanji, all_kanji = manipulate_data(kana, kyoiku, words)
         file = codecs.open('{}/{}'.format(os.getcwd(), 'all_kanji.txt'), 'w', 'UTF-8')
         for k in all_kanji:
             file.write('{}'.format(k))
