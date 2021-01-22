@@ -66,16 +66,41 @@ def get_kana_sets():
 
 
 def get_joyo_kanji():
+    """
+
+    gets joyo info from data, including the kanji, the grade of the kanji, the english equivalent, and all the readings for the kanji
+
+    Returns:
+        joyo (dict): joyo kanji info dictionary. has the form joyo['kanji'/'grade'/'english'/'readings'][i] for i kanji
+
+    """
+
+    # open file, get the data
     file = codecs.open('{}/{}'.format(os.getcwd(), 'Joyo Kanji.txt'), 'r', 'UTF-8')
     text = file.read()
     file.close()
+
+    # every other new line in the data is a new element of the joyo dictionary we will create
     lines = text.split('\n')
+    number_of_lines = len(lines)
     joyo = dict()
-    joyo['kanji'] = [0] * int(len(lines) / 2)
+
+    # every other line in the data will be a kanji in the joyo, so make joyo['kanji'] an array of an item_number/2 of 0s, to be overwritten soon with kanji
+    joyo['kanji'] = [0] * int(number_of_lines / 2)
+
+    # also all the other parts of the joyo dict have the same number of elements and we fill them in ahead of time with 0s also
     joyo['grade'], joyo['english'], joyo['readings'] = joyo['kanji'].copy(), joyo['kanji'].copy(), joyo['kanji'].copy()
-    for i in range(0, len(lines), 2):
+
+    # loop skips every other line that only contains romaji we don't need
+    for i in range(0, number_of_lines, 2):
+
+        # j will be the element number for the joyo arrays
         j = int(i / 2)
+
+        # split lines data by tabs separate the data into its respective types
         lines[i] = lines[i].split('\t')
+
+        # theres some kind of hidden return mark which is \xa0 that we want to remove
         joyo['kanji'][j] = lines[i][0].split('\xa0')[0]
         joyo['grade'][j] = lines[i][4]
         joyo['english'][j] = lines[i][6]
@@ -84,52 +109,129 @@ def get_joyo_kanji():
 
 
 def get_kyoiku_kanji(joyo, kana):
+    """
+
+    gets kyoiku kanji from kyoiku kanji list,
+    gets english and readings info for each kanji from the joyo kanji dict,
+    separates readings into an array for each kanji, removes unwanted characters from the readings, and directly connects the kanji to each reading
+    changes all verb readings to have the same form, the base form, which removes a removable ru or conjugates any u ending into an i ending
+    separates readings into onyomi or kunyomi
+
+    Args:
+        joyo (dict): joyo kanji info dictionary.
+        kana (dict): kana dictionary. has the form kana['hiragana'/'katakana'/'kana'/'romaji'][i] for i kana
+
+    Returns:
+        kyoiku(dict): kyoiku kanji info dictionary. has the form kyoiku['kanji'/'english'][i] for i kanji or english,
+            or kyoiku['readings'] is kyoiku['readings'][i]['onyomi'/'kunyomi'/'all'][j] for i kanji's j reading
+
+    """
+
+    # open file, get data
     file = codecs.open('{}/{}'.format(os.getcwd(), 'Kyoiku Kanji.txt'), 'r', 'UTF-8')
     text = file.read()
     file.close()
     kyoiku = dict()
+
+    # start with empty array for kyoiku kanji
     kyoiku['kanji'] = []
+
+    # separate all kyoiku kanji from the text data into separate elements and save to the kyoiku kanji array
     for k in text:
         if k not in kyoiku['kanji']:
             kyoiku['kanji'] += [k]
+    number_of_kyoiku_kanji = len(kyoiku['kanji'])
+    joyo_item_number = len(joyo['kanji'])
+
+    # just for now to make the english and readings arrays and have the right number of elements, fill them with the kanji, to be replaced soon
     kyoiku['english'], kyoiku['readings'] = kyoiku['kanji'].copy(), kyoiku['kanji'].copy()
-    for i in range(len(kyoiku['kanji'])):
-        for j in range(len(joyo['kanji'])):
+
+    # get english and readings for each i kyoiku kanji
+    for i in range(number_of_kyoiku_kanji):
+
+        # find the matching kanji in the joyo dict
+        for j in range(joyo_item_number):
             if kyoiku['kanji'][i] == joyo['kanji'][j]:
+
+                # once found, get the english and reading from the joyo and save it to the kyoiku dict too
                 kyoiku['english'][i], kyoiku['readings'][i] = joyo['english'][j], joyo['readings'][j]
+
+                # since you found the matching joyo kanji, you don't need to look through joyo anymore. next kyoiku kanji
                 break
-    for i in range(len(kyoiku['readings'])):
+
+    # separate readings into an array for each i kanji, remove unwanted characters from the readings, and directly connect the kanji to each reading
+    for i in range(number_of_kyoiku_kanji):
+
+        # separate this kanji's readings text by '、'. now kyoiku['readings'][i] is an array of readings. each i kanji has a readings array
         kyoiku['readings'][i] = kyoiku['readings'][i].split('、')
-        kyoiku['readings'][i][len(kyoiku['readings'][i]) - 1] = kyoiku[
-            'readings'][i][len(kyoiku['readings'][i]) - 1].split('\r')[0]
-        for j in range(len(kyoiku['readings'][i])):
+
+        # the kyoiku readings now has the form kyoiku['readings'][i][j], where j is the element number for each reading of the i kanji
+        number_of_readings_for_this_kanji = len(kyoiku['readings'][i])
+
+        # the last reading for this kanji, reset it to the same thing but without the \r return code that is hiding at the end
+        kyoiku['readings'][i][number_of_readings_for_this_kanji - 1] = kyoiku['readings'][i][number_of_readings_for_this_kanji - 1].split('\r')[0]
+
+        # now each reading has been separated from each other. but some have some other unwanted characters, lets deal with them
+        # go through all the readings for this i kanji
+        for j in range(number_of_readings_for_this_kanji):
             if '[' in kyoiku['readings'][i][j]:
+
+                # in any reading, we only need what comes before the [, if there is one, so were leaving out everything from [ onward
                 kyoiku['readings'][i][j] = kyoiku['readings'][i][j].split('[')[0]
             if '（' in kyoiku['readings'][i][j]:
-                kyoiku['readings'][i][j] = kyoiku['readings'][i][j][1:len(kyoiku['readings'][i][j]) - 1]
+                number_of_characters_in_this_reading = len(kyoiku['readings'][i][j])
+
+                # get the reading from within the （）, so leave out the first and last characters for this reading
+                kyoiku['readings'][i][j] = kyoiku['readings'][i][j][1:number_of_characters_in_this_reading - 1]
+
+                # at the end, i want each reading to be connected directly with their kanji, so a reading looks like 円エン. itll make things easier later
                 kyoiku['readings'][i][j] = kyoiku['kanji'][i] + kyoiku['readings'][i][j]
-    for i in range(len(kyoiku['readings'])):
+
+    # change all verb readings to have the same form, the base form, which removes a removable ru or conjugates any u ending into an i ending
+    # check each i kanji
+    for i in range(number_of_kyoiku_kanji):
+
+        # and each j reading for that kanji
+        number_of_readings_for_this_kanji = len(kyoiku['readings'][i])
         for j in range(len(kyoiku['readings'][i])):
+
+            # if theres a '-' that means its a verb reading
             if '-' in kyoiku['readings'][i][j]:
                 hyphen_index = kyoiku['readings'][i][j].index('-')
-                last_char = kyoiku['readings'][i][j][len(kyoiku['readings'][i][j])-1]
+
+                # remove the '-'
+                kyoiku['readings'][i][j] = kyoiku['readings'][i][j].replace('-', '')
+
+                # get the last character, which is what gets conjugated or maybe already was conjugated
+                reading_length = len(kyoiku['readings'][i][j])
+                last_char = kyoiku['readings'][i][j][reading_length-1]
+
+                # get the index that this hiragana is in the kana dict
                 hiragana_index = kana['hiragana'].index(last_char)
+
+                # this determines that the last character ends with an 'u' (this includes ku, ru, etc.), so it has not been conjugated to the base yet
                 if hiragana_index % 5 == 2:
-                    if len(kyoiku['readings'][i][j][hyphen_index+1:]) > 1 and last_char == 'る':
-                        to_do = 'remove ru'
+
+                    # so we will conjugate to the base, which means removing a ru that gets removed, or changing the last u to an i, like ku to ki.
+                    # readings that have more than 1 hiragana after the hyphen have the ru removed when conjugated, like ta-beru. remove last character
+                    if len(kyoiku['readings'][i][j][hyphen_index:]) > 1 and last_char == 'る':
+                        kyoiku['readings'][i] += [kyoiku['readings'][i][j][:reading_length-1]]
+
+                    # otherwise the last character needs to be replaced with the 'i' equivalent of the hiragana
                     else:
-                        to_do = 'change _u character to _i character'
-                    kyoiku['readings'][i][j] = kyoiku['readings'][i][j].replace('-', '')
-                    length = len(kyoiku['readings'][i][j])
-                    if to_do == 'change _u character to _i character':
-                        kyoiku['readings'][i] += [kyoiku['readings'][i][j][:length-1] +
-                                                  kana['hiragana'][hiragana_index - 1]]
-                    else:
-                        kyoiku['readings'][i] += [kyoiku['readings'][i][j][:length-1]]
-                else:
-                    kyoiku['readings'][i][j] = kyoiku['readings'][i][j].replace('-', '')
-    for i in range(len(kyoiku['readings'])):
+                        kyoiku['readings'][i] += [kyoiku['readings'][i][j][:reading_length-1] + kana['hiragana'][hiragana_index - 1]]
+
+                # if the last character didn't end with a 'u', then it was already congugated to its base
+                # TODO: need to check for duplicate readings
+
+    # separate readings into onyomi or kunyomi for each i kanji
+    for i in range(number_of_kyoiku_kanji):
+
+        # replace the current readings array with a dictionar, where onyomi, kunyomi, and all each have an array assigned to them
         kyoiku['readings'][i] = [{'onyomi': [], 'kunyomi': [], 'all': kyoiku['readings'][i]}]
+
+        # check if each j reading is onyomi or kunyomi, and add them to the new kunyomi array or onyomi array
+        # the final form of kyoiku['readings'] is kyoiku['readings'][i]['onyomi'/'kunyomi'/'all'][j] for i kanji's j reading
         for j in kyoiku['readings'][i]['all']:
             if kyoiku['readings'][i]['all'][j][1] in kana['katakana']:
                 kyoiku['readings'][i]['onyomi'] += [kyoiku['readings'][i]['all'][j]]
@@ -384,13 +486,28 @@ def print_cards_txt(furigana, japanese, english, kanji, kanji_english, count, wo
 
 def main():
     test = 0
+
+    # test code
     if test == 1:
         1
+
+    # main code
     else:
+
+        # get starting time in order to get total time spent running at the end
         start_time = time.time()
+
+        # get the kana dictionary. has the form kana['hiragana'/'katakana'/'kana'/'romaji'][i] for i kana
         kana = get_kana_sets()
+
+        # get the joyo info dictionary. has the form joyo['kanji'/'grade'/'english'/'readings'][i] for i kanji
         joyo = get_joyo_kanji()
+
+        # get the kyoiku kyoiku kanji info dictionary. has the form kyoiku['kanji'/'english'][i] for i kanji or english,
+        # or kyoiku['readings'] is kyoiku['readings'][i]['onyomi'/'kunyomi'/'all'][j] for i kanji's j reading
         kyoiku = get_kyoiku_kanji(joyo)
+
+
         words = gather_data()
         words_with_same_furigana, words_with_same_kanji, all_kanji = manipulate_data(kana, kyoiku, words)
         file = codecs.open('{}/{}'.format(os.getcwd(), 'all_kanji.txt'), 'w', 'UTF-8')
