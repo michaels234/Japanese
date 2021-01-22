@@ -4,7 +4,61 @@ import time
 import math
 
 
+def main():
+    test = 0
+
+    # test code
+    if test == 1:
+        1
+
+    # main code
+    else:
+
+        # get starting time in order to get total time spent running at the end
+        start_time = time.time()
+
+        # get the kana dictionary. has the form kana['hiragana'/'katakana'/'kana'/'romaji'][i] for i kana
+        kana = get_kana_sets()
+
+        # get the joyo info dictionary. has the form joyo['kanji'/'grade'/'english'/'readings'][i] for i kanji
+        joyo = get_joyo_kanji()
+
+        # get the kyoiku kyoiku kanji info dictionary. has the form kyoiku['kanji'/'english'][i] for i kanji or english,
+        # or kyoiku['readings'] is kyoiku['readings'][i]['onyomi'/'kunyomi'/'all'][j] for i kanji's j reading
+        kyoiku = get_kyoiku_kanji(joyo)
+
+
+        words = get_n2_vocab()
+        words_with_same_furigana, words_with_same_kanji, all_kanji = manipulate_data(kana, kyoiku, words)
+        file = codecs.open('{}/{}'.format(os.getcwd(), 'all_kanji.txt'), 'w', 'UTF-8')
+        for k in all_kanji:
+            file.write('{}'.format(k))
+        file.close()
+        print_cards_txt(furigana, japanese, english, words_with_same_furigana, words_with_same_kanji)
+        total_time = time.time() - start_time
+        # count = 0
+        # for k in all_kanji:
+        #     if k not in kyoiku_kanji:
+        #         count += 1
+        #         print(count, k)
+
+        # print(all_kanji)
+        print('Total Kanji: {}'.format(len(all_kanji)))
+        print('Time: {}m　{}s'.format(math.floor(total_time/60), math.floor(total_time-math.floor(total_time/60)*60)))
+
+
 def get_kana_sets():
+    """
+
+    gets hiragana, katakana, kana (which is hiragana and katakana put together), and romaji and puts them into one dictionary
+
+    Returns:
+        kana (dict): kana dictionary. has the form kana['hiragana'/'katakana'/'kana'/'romaji'][i] for i kana
+
+    """
+
+    print('get_kana_sets')
+
     hiragana = ['あ', 'い', 'う', 'え', 'お',
                 'ぁ', 'ぃ', 'ぅ', 'ぇ', 'ぉ',
                 'か', 'き', 'く', 'け', 'こ',
@@ -23,7 +77,8 @@ def get_kana_sets():
                 'ゃ', '＃', 'ゅ', '＃', 'ょ',
                 'ら', 'り', 'る', 'れ', 'ろ',
                 'わ', '＃', '＃', '＃', 'を',
-                'ん']
+                'ん', '[dash]']
+
     katakana = ['ア', 'イ', 'ウ', 'エ', 'オ',
                 'ァ', 'ィ', 'ゥ', 'ェ', 'ォ',
                 'カ', 'キ', 'ク', 'ケ', 'コ',
@@ -42,7 +97,9 @@ def get_kana_sets():
                 'ャ', '＃', 'ュ', '＃', 'ョ',
                 'ラ', 'リ', 'ル', 'レ', 'ロ',
                 'ワ', '＃', '＃', '＃', 'ヲ',
-                'ン', 'ー']
+                'ン', 'ー',
+                ]
+
     romaji = ['a', 'i', 'u', 'e', 'o',
               'ka', 'ki', 'ku', 'ke', 'ko',
               'ga', 'gi', 'gu', 'ge', 'go',
@@ -60,9 +117,40 @@ def get_kana_sets():
               '[small_ya]', '#', '[small_yu]', '#', '[small_yo]',
               'ra', 'ri', 'ru', 're', 'ro',
               'wa', '#', '#', '#', 'wo',
-              'n']
+              'n', '[dash]',
+              ]
+
     kana = {'hiragana': hiragana, 'katakana': katakana, 'kana': hiragana + katakana, 'romaji': romaji}
+
     return kana
+
+
+def katakana_hiragana_switcher(text, kana, to=''):
+
+    # go thru the text for each character text[j]
+    for j in range(len(text)):
+
+        # this section outputs hiragana. itll skip any already hiragana character
+        if (to == 'hiragana' and text[j] in kana['hiragana']) or (to == '' and text[j] in kana['katakana']):
+
+            kana_index_of_text_j = kana['katakana'].index(text[j])
+            if text[j] != 'ー':
+                text = text[:j] + kana['hiragana'][index_j] + text[j + 1:]
+            else:
+                index_jm1 = kana['hiragana'].index(text[j - 1])
+                text = text[:j] + kana['hiragana'][index_jm1 % 5] + text[j + 1:]
+
+        # this section outputs katakana
+        elif to == 'katakana':
+            if to == 'katakana' and text[j] not in kana['hiragana']:
+                continue
+            index_j = kana['hiragana'].index(text[j])
+            if text[j] != 'ー':
+                text = text[:j] + kana['katakana'][index_j] + text[j + 1:]
+            else:
+                index_jm1 = kana['katakana'].index(text[j - 1])
+                text = text[:j] + kana['katakana'][index_jm1 % 5] + text[j + 1:]
+    return text
 
 
 def get_joyo_kanji():
@@ -74,6 +162,8 @@ def get_joyo_kanji():
         joyo (dict): joyo kanji info dictionary. has the form joyo['kanji'/'grade'/'english'/'readings'][i] for i kanji
 
     """
+
+    print('get_joyo_kanji')
 
     # open file, get the data
     file = codecs.open('{}/{}'.format(os.getcwd(), 'Joyo Kanji.txt'), 'r', 'UTF-8')
@@ -105,6 +195,7 @@ def get_joyo_kanji():
         joyo['grade'][j] = lines[i][4]
         joyo['english'][j] = lines[i][6]
         joyo['readings'][j] = lines[i][7]
+
     return joyo
 
 
@@ -126,6 +217,8 @@ def get_kyoiku_kanji(joyo, kana):
             or kyoiku['readings'] is kyoiku['readings'][i]['onyomi'/'kunyomi'/'all'][j] for i kanji's j reading
 
     """
+
+    print('get_kyoiku_kanji')
 
     # open file, get data
     file = codecs.open('{}/{}'.format(os.getcwd(), 'Kyoiku Kanji.txt'), 'r', 'UTF-8')
@@ -240,8 +333,10 @@ def get_kyoiku_kanji(joyo, kana):
     return kyoiku
 
 
-def gather_data():
-    print('gather')
+def get_n2_vocab():
+
+    print('get_n2_vocab')
+
     words = {'japanese': [], 'furigana': [], 'english': []}
     # which = 0  # both lists
     which = 1  # list 1
@@ -291,29 +386,6 @@ def gather_data():
                     break
                 count2 += 1
     return words
-
-
-def katakana_hiragana_switcher(text, kana, to=''):
-    for j in range(len(text)):
-        if text in kana['katakana'] or to == 'hiragana':
-            if to == 'hiragana' and text[j] not in kana['katakana']:
-                continue
-            index_j = kana['katakana'].index(kana[j])
-            if text[j] != 'ー':
-                text = text[:j] + kana['hiragana'][index_j] + text[j + 1:]
-            else:
-                index_jm1 = kana['hiragana'].index(text[j - 1])
-                text = text[:j] + kana['hiragana'][index_jm1 % 5] + text[j + 1:]
-        elif to == 'katakana':
-            if to == 'katakana' and text[j] not in kana['hiragana']:
-                continue
-            index_j = kana['hiragana'].index(text[j])
-            if text[j] != 'ー':
-                text = text[:j] + kana['katakana'][index_j] + text[j + 1:]
-            else:
-                index_jm1 = kana['katakana'].index(text[j - 1])
-                text = text[:j] + kana['katakana'][index_jm1 % 5] + text[j + 1:]
-    return text
 
 
 def manipulate_data(kana, kyoiku, words):
@@ -482,49 +554,6 @@ def print_cards_txt(furigana, japanese, english, kanji, kanji_english, count, wo
             file.write('</tr>')
         file.write('<table border = "1">')
     file.close()
-
-
-def main():
-    test = 0
-
-    # test code
-    if test == 1:
-        1
-
-    # main code
-    else:
-
-        # get starting time in order to get total time spent running at the end
-        start_time = time.time()
-
-        # get the kana dictionary. has the form kana['hiragana'/'katakana'/'kana'/'romaji'][i] for i kana
-        kana = get_kana_sets()
-
-        # get the joyo info dictionary. has the form joyo['kanji'/'grade'/'english'/'readings'][i] for i kanji
-        joyo = get_joyo_kanji()
-
-        # get the kyoiku kyoiku kanji info dictionary. has the form kyoiku['kanji'/'english'][i] for i kanji or english,
-        # or kyoiku['readings'] is kyoiku['readings'][i]['onyomi'/'kunyomi'/'all'][j] for i kanji's j reading
-        kyoiku = get_kyoiku_kanji(joyo)
-
-
-        words = gather_data()
-        words_with_same_furigana, words_with_same_kanji, all_kanji = manipulate_data(kana, kyoiku, words)
-        file = codecs.open('{}/{}'.format(os.getcwd(), 'all_kanji.txt'), 'w', 'UTF-8')
-        for k in all_kanji:
-            file.write('{}'.format(k))
-        file.close()
-        print_cards_txt(furigana, japanese, english, words_with_same_furigana, words_with_same_kanji)
-        total_time = time.time() - start_time
-        # count = 0
-        # for k in all_kanji:
-        #     if k not in kyoiku_kanji:
-        #         count += 1
-        #         print(count, k)
-
-        # print(all_kanji)
-        print('Total Kanji: {}'.format(len(all_kanji)))
-        print('Time: {}m　{}s'.format(math.floor(total_time/60), math.floor(total_time-math.floor(total_time/60)*60)))
 
 
 main()
