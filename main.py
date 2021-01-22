@@ -220,39 +220,55 @@ def manipulate_data(kana, kyoiku, words):
     """ Check for mismatched number of japanese, english, furigana arrays """
     # get elements_j, the number of elements in japanese list
     elements_j = len(words['japanese'])
-    # assert that the numbers of elements in furigana and english lists are also  equal to elements_j
+    # assert that the numbers of elements in furigana and english lists are also equal to elements_j
     assert elements_j == len(words['furigana']), 'Error in numbers of items in lists'
     assert elements_j == len(words['english']), 'Error in numbers of items in lists'
 
-    for i in range(elements_j):  # get rid of () and ~ in furigana
+    """ get words with same furigana and makes kanji list """
+    # get rid of () and ~ in furigana
+    for i in range(elements_j):
         if '（' in words['furigana'][i]:
             words['furigana'][i] = ''
         if '~' in words['furigana'][i]:
             words['furigana'][i] = words['furigana'][i].replace('~', '')
-    """ get words with same furigana and makes kanji list """
-    for i in range(elements_j):  # loop through all the words
+    # loop through all the words
+    for i in range(elements_j):
+        # # loop that resets j to 0 if it goes past the last word in the list
         # for j in range(i + 1, i + 1 + number):
-        #     if j > number - 1:  # resets j to 0 if it goes past the last word in the list
+        #     if j > number - 1:
         #         j -= number
-        count = -1
         """ get words with same furigana """
-        for j in range(elements_j):  # 2nd loop through all the words
+        # initiate words['same furigana'][i] dictionary with empty lists
+        words['same furigana'][i] = {'japanese': [], 'english': []}
+        # 2nd loop through all the words
+        for j in range(elements_j):
+            # skip when j and i are the same
             if i == j:
                 continue
-            if words['furigana'][i] == words['furigana'][j]:  # checks for words_with_same_furigana
-                count += 1
-                words[f'same furigana {count} japanese'][i] = words['japanese'][j]
-                words[f'same furigana {count} english'][i] = words['english'][j]
-        words['kanji'][i] = []
+            # get words with same furigana, get their japanese and english
+            if words['furigana'][i] == words['furigana'][j]:
+                words['same furigana'][i]['japanese'] += [words['japanese'][j]]
+                words['same furigana'][i]['english'] += [words['english'][j]]
         """ make kanji list """
+        # initiate words['kanji'][i] with an empty list
+        words['kanji'][i] = []
+        # loop through all the characters in words['japanese'][i]
         for k in words['japanese'][i]:
-            if k not in ['', '~', '(', ')', '/', '='] and k not in kana['kana']:  # if character k is a kanji
-                words['kanji'][i] += [{'kanji': k}]  # adds k to kanji list
-                index_kanji = len(words["kanji"][i]) - 1  # gets index of current kanji in kanji list
-                if k in kyoiku['kanji']:  # if kanji k is a kyoiku kanji
-                    kyoiku_index = kyoiku['kanji'].index(k)  # gets index of current kanji in kyoiku list
-                    words['kanji'][i][index_kanji]['english'] = kyoiku['english'][kyoiku_index]  # inserts english
-                    for m in kyoiku['readings'][kyoiku_index]['all']:  # loops through all joyo readings for this kanji
+            # if character k is a kanji
+            if k not in ['', '~', '(', ')', '/', '='] and k not in kana['kana']:
+                # initialize dictionary for kanji list, and add kanji k to dictionary
+                words['kanji'][i] += [{'kanji': k}]
+                # get index of current kanji in kanji list
+                index_kanji = len(words["kanji"][i]) - 1
+                # if kanji k is a kyoiku kanji
+                if k in kyoiku['kanji']:
+                    # get index of kanji k in kyoiku list
+                    kyoiku_index = kyoiku['kanji'].index(k)
+                    # add the kanji's english to the kanji list dictionary
+                    words['kanji'][i][index_kanji]['english'] = kyoiku['english'][kyoiku_index]
+                    # loop through all the joyo readings for this kanji
+                    for m in kyoiku['readings'][kyoiku_index]['all']:
+                        # if joyo reading m is in the furigana for this i'th word, thats the reading for kanji k here
                         if katakana_hiragana_switcher(m[1:], kana, to='hiragana') in words['furigana'][i]:
                             # finds the reading that this kanji has in this word
                             if m in kyoiku['readings'][kyoiku_index]['onyomi']:
