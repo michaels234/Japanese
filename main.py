@@ -25,16 +25,25 @@ def main():
 
         # get the kyoiku kyoiku kanji info dictionary. has the form kyoiku['kanji'/'english'][i] for i kanji or english,
         # or kyoiku['readings'] is kyoiku['readings'][i]['onyomi'/'kunyomi'/'all'][j] for i kanji's j reading
-        kyoiku = get_kyoiku_kanji(joyo)
+        kyoiku = get_kyoiku_kanji(joyo, kana)
 
 
-        words = get_n2_vocab()
-        words_with_same_furigana, words_with_same_kanji, all_kanji = manipulate_data(kana, kyoiku, words)
-        file = codecs.open('{}/{}'.format(os.getcwd(), 'all_kanji.txt'), 'w', 'UTF-8')
-        for k in all_kanji:
-            file.write('{}'.format(k))
+        # words = get_n2_vocab()
+        # words_with_same_furigana, words_with_same_kanji, all_kanji = manipulate_data(kana, kyoiku, words)
+        # file = codecs.open('{}/{}'.format(os.getcwd(), 'all_kanji.txt'), 'w', 'UTF-8')
+        # for k in all_kanji:
+        #     file.write('{}'.format(k))
+        # file.close()
+        # print_cards_txt(furigana, japanese, english, words_with_same_furigana, words_with_same_kanji)
+
+        # open file, get the data
+        file = codecs.open('{}/{}'.format(os.getcwd(), 'edict.txt'), 'r', 'euc_jp')
+        text = file.read()
         file.close()
-        print_cards_txt(furigana, japanese, english, words_with_same_furigana, words_with_same_kanji)
+        # every other new line in the data is a new element of the joyo dictionary we will create
+        lines = text.split('\n')
+        print(lines[0])
+
         total_time = time.time() - start_time
         # count = 0
         # for k in all_kanji:
