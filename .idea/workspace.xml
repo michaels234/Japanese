@@ -1,16 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="b548e52a-480f-41d4-8002-e5363285178e" name="Default Changelist" comment="" />
+    <list default="true" id="b548e52a-480f-41d4-8002-e5363285178e" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/py_files/convert_to_hiragana.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/py_files/get_joyo.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/py_files/get_kana.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/py_files/get_kyoiku.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/py_files/search_edict.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/mdsim.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/mdsim.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectId" id="1nSuA5Iook0jDP5AzMf4LnK8TuJ" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -65,7 +84,14 @@
       <option name="project" value="LOCAL" />
       <updated>1611466665325</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="update, switched back to pycharm">
+      <created>1611477074683</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1611477074683</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
