@@ -2,14 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b548e52a-480f-41d4-8002-e5363285178e" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/py_files/convert_to_hiragana.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/py_files/get_joyo.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/py_files/get_kana.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/py_files/get_kyoiku.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/py_files/search_edict.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/mdsim.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/mdsim.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -38,7 +32,10 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="settings.editor.selected.configurable" value="preferences.editor" />
+    <property name="project.structure.last.edited" value="Project" />
+    <property name="project.structure.proportion" value="0.0" />
+    <property name="project.structure.side.proportion" value="0.2" />
+    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
   <component name="RunManager">
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
@@ -104,9 +101,14 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="update, switched back to pycharm" />
     <option name="LAST_COMMIT_MESSAGE" value="update, switched back to pycharm" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>

@@ -1,4 +1,4 @@
-from py_files.get_kana import *
+from py_files.get_kana import get_kana
 
 
 def convert_to_hiragana(text, kana):
@@ -15,7 +15,7 @@ def convert_to_hiragana(text, kana):
     return text
 
 
-def test_to_hiragana():
+def test_convert_to_hiragana():
 
     print('test_to_hiragana...')
 

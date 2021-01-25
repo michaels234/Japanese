@@ -1,8 +1,8 @@
 import time
 import math
-from py_files.get_joyo import *
-from py_files.get_kyoiku import *
-from py_files.search_edict import *
+from py_files.convert_to_hiragana import test_convert_to_hiragana
+from py_files.get_joyo import get_joyo, test_get_joyo
+from py_files.search_edict import search_edict
 
 
 def main():
@@ -16,8 +16,8 @@ def main():
     # test code
     if test == 1:
         print('test...')
-        test_to_hiragana()
-        test_get_joyo_kanji()
+        test_convert_to_hiragana()
+        test_get_joyo()
         outp = search_edict()
         for item in outp:
             print(f"{item['japanese']} : {item['english']}")

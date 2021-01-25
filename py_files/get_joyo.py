@@ -1,6 +1,7 @@
 import os
 import codecs
-from py_files.convert_to_hiragana import *
+from py_files.convert_to_hiragana import convert_to_hiragana
+from py_files.get_kana import get_kana
 
 
 def get_joyo(kana):
@@ -136,7 +137,7 @@ def get_joyo(kana):
     return joyo
 
 
-def test_get_joyo_kanji():
+def test_get_joyo():
 
     print('test_get_joyo_kanji...')
 
