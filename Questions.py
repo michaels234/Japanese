@@ -6,19 +6,18 @@ class Questions:
 
     def __init__(self, query, correct_answer):
         self.query = query
-        self.correctAnswer = correct_answer
+        self.correctAnswer = correct_answer.upper()
 
 
-    def check(self):
-        answer = self.ask()
+    def check(self, answer):
         if answer == self.correctAnswer:
             print("Correct!")
-            self.nCorrect += 1
+            Questions.nCorrect += 1
         else:
             print("Incorrect. ")
 
     def ask(self):
-        self.nQuestions += 1
+        Questions.nQuestions += 1
         print(self.query)
         answer = input("")
         answer = answer.upper()
@@ -26,8 +25,8 @@ class Questions:
 
 
 p1 = Questions("盲目", "Blindness")   #test
-Questions.ask(p1)
-print(Questions.nCorrect, "/", Questions.nQuestions)
+p1.check(p1.ask())
+#print(Questions.nCorrect, "/", Questions.nQuestions)
 
 # seeing as in the future there may be more than 1 type of question,
 #I wanted to have msq inherit the

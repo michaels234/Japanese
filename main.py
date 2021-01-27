@@ -3,6 +3,7 @@ import math
 from py_files.convert_to_hiragana import test_convert_to_hiragana
 from py_files.get_joyo import get_joyo, test_get_joyo
 from py_files.search_edict import search_edict
+from py_files.database import database
 
 
 def main():
@@ -17,6 +18,7 @@ def main():
     if test == 1:
         print('test...')
         test_convert_to_hiragana()
+        #database()
         test_get_joyo()
         outp = search_edict()
         for item in outp:
