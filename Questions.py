@@ -10,7 +10,7 @@ class Questions:
 
 
     def check(self, answer):
-        if answer == self.correctAnswer:
+        if answer.upper() == self.correctAnswer:
             print("Correct!")
             Questions.nCorrect += 1
         else:
@@ -25,8 +25,10 @@ class Questions:
 
 
 p1 = Questions("盲目", "Blindness")   #test
+p2 = Questions("桃", "Peach")
 p1.check(p1.ask())
-#print(Questions.nCorrect, "/", Questions.nQuestions)
+p2.check(p2.ask())
+print(Questions.nCorrect, "/", Questions.nQuestions)
 
 # seeing as in the future there may be more than 1 type of question,
 #I wanted to have msq inherit the
